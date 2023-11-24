@@ -159,4 +159,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-data/
+*.zip
+data/multifc/multi_fc_publicdata
+data/multiclaim/*.csv
+data/mumin
+data/nela
