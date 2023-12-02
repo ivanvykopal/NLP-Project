@@ -172,3 +172,6 @@ Test.ipynb
 src/models/*
 src/outputs/*
 Download data.ipynb
+muse.py
+Data test.ipynb
+SentenceTransformer.py
