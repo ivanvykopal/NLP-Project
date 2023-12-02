@@ -12,9 +12,12 @@ from .slovaksum import SlovakSumDataset
 from .squadsk import SquadSKDataset
 from .ud import UDDataset
 from .wikipedia import WikipediaDataset
+from .ccnews import CCNewsDataset
+from .combined import CombinedDataset
+from .sumeczech import SumeCzechDataset
 
 
-def get_dataset(dataset_name: str, path: str, language:str) -> Dataset:
+def get_dataset(dataset_name: str, path: str=None, language: str=None) -> Dataset:
     if dataset_name == 'fever':
         return FEVERDataset(path)
     elif dataset_name == 'csfever':
@@ -32,7 +35,7 @@ def get_dataset(dataset_name: str, path: str, language:str) -> Dataset:
     elif dataset_name == 'multifc':
         return MultiFCDataset(path)
     elif dataset_name == 'afp':
-        return AFPDataset(path)
+        return AFPDataset(path, language=language)
     elif dataset_name == 'slovaksum':
         return SlovakSumDataset(path)
     elif dataset_name == 'squadsk':
@@ -41,5 +44,15 @@ def get_dataset(dataset_name: str, path: str, language:str) -> Dataset:
         return UDDataset(path, language=language)
     elif dataset_name == 'wikipedia':
         return WikipediaDataset(path, language=language)
+    elif dataset_name == 'ccnews':
+        return CCNewsDataset(path)
+    elif dataset_name == 'sumeczech':
+        return SumeCzechDataset(path)
+    elif dataset_name == 'combined_sk':
+        return CombinedDataset(language='sk')
+    elif dataset_name == 'combined_en':
+        return CombinedDataset(language='en')
+    elif dataset_name == 'combined_cs':
+        return CombinedDataset(language='cs')
     else:
         raise ValueError(f'Unknown dataset name: {dataset_name}')

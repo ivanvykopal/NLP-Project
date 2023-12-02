@@ -7,6 +7,9 @@ class SlovakSumDataset(Dataset):
         super().__init__(path)
 
     def load_data(self, path) -> None:
-        self.data = load_dataset("kiviki/SlovakSum")
-        self.data = self.data['train']['text']
-        self.data = pd.DataFrame(self.data)
+        df = pd.DataFrame()
+        data = load_dataset("kiviki/SlovakSum")
+        df_data = pd.concat([pd.DataFrame(data['train']), pd.DataFrame(data['validation']), pd.DataFrame(data['test'])])
+        df = pd.concat([df, df_data])
+        self.data = list(df['text'])
+

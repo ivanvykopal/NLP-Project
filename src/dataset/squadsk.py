@@ -8,10 +8,10 @@ class SquadSKDataset(Dataset):
         super().__init__(path)
 
     def load_data(self, path = None) -> None:
-        self.data = load_dataset("TUKE-DeutscheTelekom/squad-sk")
-        
+        data = load_dataset("TUKE-DeutscheTelekom/squad-sk")
+        df = pd.DataFrame()
+        df_data = pd.concat([pd.DataFrame(data['train']), pd.DataFrame(data['validation'])])
+        df = pd.concat([df, df_data])
         # filter only context that is unique
-        data = pd.DataFrame(self.data['train'])
-        data = data.drop_duplicates(subset=['context'])
-        self.data = datasets.Dataset.from_pandas(data)
-        self.data = self.data['context']
+        df = df.drop_duplicates(subset=['context'])
+        self.data = list(df['context'])

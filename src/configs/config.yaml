@@ -1,0 +1,39 @@
+learning_rate: 0.01
+optimizer: Adam
+loss: CrossEntropyLoss
+batch_size: 32
+epochs: 50
+num_warmup_steps: 0
+model_name: LSTMClassifier
+output_path: ../results
+eval_strategy: steps
+fp16: True
+dataset: ctkfacts
+dataset_path: ../data
+language: en
+embedding: fasttext
+embedding_path: ./outputs/wikipedia_cs_embedding/wikipedia_cs_embedding.ft
+embedding_dim: 100
+hidden_dim: 128
+n_layers: 2
+dropout: 0.2
+bidirectional: True
+output_dim: 3
+device: cuda
+metrics:
+  - name: f1
+    task: multiclass
+    average: macro
+    num_classes: 3
+  - name: accuracy
+    task: multiclass
+    average: macro
+    num_classes: 3
+  - name: precision
+    task: multiclass
+    average: macro
+    num_classes: 3
+  - name: recall
+    task: multiclass
+    average: macro
+    num_classes: 3

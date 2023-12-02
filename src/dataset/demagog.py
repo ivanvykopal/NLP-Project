@@ -4,8 +4,8 @@ from .dataset import Dataset
 
 class DemagogDataset(Dataset):
     def __init__(self, path, language: str = 'cs') -> None:
-        super().__init__(path)
         self.language = language
+        self.load_data()
 
     def load_data(self, path: str = '../../data/demagog/demagog') -> None:
         path = f'{path}-{self.language}.csv'
