@@ -167,3 +167,8 @@ data/nela
 
 wandb.conf
 Test.ipynb
+*.jsonl
+
+src/models/*
+src/outputs/*
+Download data.ipynb
