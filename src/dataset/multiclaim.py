@@ -1,12 +1,39 @@
 import pandas as pd
+from functools import partial
 from .dataset import Dataset
 
 
 class MultiClaimDataset(Dataset):
-    def __init__(self, path) -> None:
-        super().__init__(path)
+    def __init__(self, path: str = None, language: str = 'en') -> None:
+        self.language = language
+        self.load_data()
 
-    def load_data(self, path: str = '../../data/multiclaim/posts.csv') -> None:
+    def convert_language_triplet(self, language: str) -> str:
+        if language == 'en':
+            return 'eng'
+        elif language == 'cs':
+            return 'ces'
+        elif language == 'sk':
+            return 'slk'
+        else:
+            raise ValueError('Language not supported')
+        
+    def convert_targets(self, target):
+        false_labels = [
+            'false information', 'partly false information', 'false information.', 'lltered photo', 'partly false information.',
+            'partly false', 'false', 'false information and graphic content', 'altered video', 'sensitive content',
+            'altered photo/video.', 'altered photo/video', 'false headline', 'altered photo'
+            ]
+        true_labels = ['true', 'mostly-true', 'half-true']
+        if target.strip().lower() in false_labels:
+            return 0
+        elif target in true_labels:
+            return 1
+        else:
+            return 2
+    
+
+    def load_data(self, path: str = '../data/multiclaim/posts.csv') -> None:
         df = pd.read_csv(path)
 
         self.data = df[['text', 'verdicts']]
@@ -24,3 +51,12 @@ class MultiClaimDataset(Dataset):
         self.data = self.data.drop(columns=['text', 'verdicts'])
 
         self.data = self.data[~self.data['label'].isna()]
+        self.data.drop_duplicates(subset=['claim'], inplace=True)
+
+        if self.language is not None:
+            self.data = self.data[self.data['language'] == self.convert_language_triplet(self.language)]
+            # self.data.drop(columns=['language'], inplace=True)
+
+        self.data['claim_tokens'] = self.data.claim.apply(
+            partial(self.preprocess_string, language=self.convert_language(self.language)))
+        self.data['label'] = self.data.label.apply(self.convert_targets)

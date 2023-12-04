@@ -4,7 +4,7 @@ from functools import partial
 
 
 class CTKFactsDataset(Dataset):
-    def __init__(self, path=None, language: str = 'cs') -> None:
+    def __init__(self, path: str = None, language: str = 'cs') -> None:
         self.language = self.convert_language(language)
         self.load_data()
         self.create_vocab()

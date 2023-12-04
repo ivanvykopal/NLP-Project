@@ -1,3 +1,4 @@
+from .combined_claim import CombinedClaimDataset
 from .csfever import CSFEVERDataset
 from .fever import FEVERDataset
 from .dataset import Dataset
@@ -31,7 +32,7 @@ def get_dataset(dataset_name: str, path: str=None, language: str=None) -> Datase
     elif dataset_name == 'liar':
         return LiarDataset(path)
     elif dataset_name == 'multiclaim':
-        return MultiClaimDataset(path)
+        return MultiClaimDataset(path, language=language)
     elif dataset_name == 'multifc':
         return MultiFCDataset(path)
     elif dataset_name == 'afp':
@@ -54,5 +55,11 @@ def get_dataset(dataset_name: str, path: str=None, language: str=None) -> Datase
         return CombinedDataset(language='en')
     elif dataset_name == 'combined_cs':
         return CombinedDataset(language='cs')
+    elif dataset_name == 'combined_claim_cs':
+        return CombinedClaimDataset(language='cs')
+    elif dataset_name == 'combined_claim_en':
+        return CombinedClaimDataset(language='en')
+    elif dataset_name == 'combined_claim_sk':
+        return CombinedClaimDataset(language='sk')
     else:
         raise ValueError(f'Unknown dataset name: {dataset_name}')
