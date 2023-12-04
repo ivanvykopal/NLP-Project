@@ -1,3 +1,4 @@
+
 from functools import partial
 import pandas as pd
 from .dataset import Dataset
@@ -37,6 +38,7 @@ class AFPDataset(Dataset):
         elif 'no evidence' in target.lower():
             return 2
         return target
+
 
     def load_data(self, path: str = '../../data/afp/afp-all-data.csv') -> None:
         df = pd.read_csv(path)
