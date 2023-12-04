@@ -12,7 +12,9 @@ class MultiClaimDataset(Dataset):
         self.data = df[['text', 'verdicts']]
         # eval text and verdict
         self.data['verdicts'] = self.data['verdicts'].apply(lambda x: eval(x))
-        self.data['label'] = self.data['verdicts'].apply(lambda x: x[0])
+        self.data['label'] = self.data['verdicts'].apply(lambda x: x[0] if len(x) > 0 else None)
+
+        self.data = self.data[~self.data['text'].isna()]
 
         self.data['text'] = self.data['text'].apply(lambda x: eval(x))
         self.data['claim'] = self.data['text'].apply(lambda x: x[0])

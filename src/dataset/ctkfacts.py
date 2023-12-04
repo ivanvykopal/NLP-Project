@@ -19,7 +19,7 @@ class CTKFactsDataset(Dataset):
             return 2
 
 
-    def load_data(self, path: str = '../data/ctkfacts/label_wo_delclaims.csv') -> None:
+    def load_data(self, path: str = '../../data/ctkfacts/label_wo_delclaims.csv') -> None:
         df = pd.read_csv(path)
 
         self.data = df[['claim_text', 'label']]

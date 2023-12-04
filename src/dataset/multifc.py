@@ -7,7 +7,7 @@ class MultiFCDataset(Dataset):
         super().__init__(path)
 
     def load_data(self, path: str = '../../data/multifc/all.tsv') -> None:
-        df = pd.read_csv(path, sep='\t')
+        df = pd.read_csv(path, sep='\t', header=None)
 
         self.data = df[[1, 2]]
         # rename columns
