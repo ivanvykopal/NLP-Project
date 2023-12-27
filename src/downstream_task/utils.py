@@ -9,6 +9,9 @@ from .XLMRoBERTa import XLMRoBERTa
 from .XLMMLM100 import XLMMLM100
 from .mBERT import mBERT
 from .LSTM import LSTMClassifier
+from .LSTM2 import LSTMClassifier2
+from .LSTM3 import LSTMClassifier3
+from .LSTM4 import LSTMClassifier4
 
 
 WandbConfig = namedtuple(
@@ -58,6 +61,47 @@ def get_model(config, dataset, embedding_dict=None):
             padding_idx=dataset.token2idx['<pad>'],
             batch_size=config.batch_size,
             device=config.device
+        )
+    elif model_name.lower() == 'lstmclassifier2':
+        return LSTMClassifier2(
+            embedding_dim=embedding_dim,
+            hidden_dim=hidden_dim,
+            n_layers=n_layers,
+            output_dim=output_dim,
+            bidirectional=bidirectional,
+            embedding_dict=embedding_dict,
+            vocabulary=vocabulary,
+            padding_idx=dataset.token2idx['<pad>'],
+            batch_size=config.batch_size,
+            device=config.device
+        )
+    elif model_name.lower() == 'lstmclassifier3':
+        return LSTMClassifier3(
+            embedding_dim=embedding_dim,
+            hidden_dim=hidden_dim,
+            n_layers=n_layers,
+            output_dim=output_dim,
+            bidirectional=bidirectional,
+            embedding_dict=embedding_dict,
+            vocabulary=vocabulary,
+            padding_idx=dataset.token2idx['<pad>'],
+            batch_size=config.batch_size,
+            device=config.device,
+            dropout_size=config.dropout
+        )
+    elif model_name.lower() == 'lstmclassifier4':
+        return LSTMClassifier4(
+            embedding_dim=embedding_dim,
+            hidden_dim=hidden_dim,
+            n_layers=n_layers,
+            output_dim=output_dim,
+            bidirectional=bidirectional,
+            embedding_dict=embedding_dict,
+            vocabulary=vocabulary,
+            padding_idx=dataset.token2idx['<pad>'],
+            batch_size=config.batch_size,
+            device=config.device,
+            dropout_size=config.dropout
         )
     elif model_name.lower() == 'mbert':
         return mBERT(config)

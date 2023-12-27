@@ -1,10 +1,7 @@
 import os
 from downstream_task.trainer import Trainer
 import argparse
-import torch
-from torch.utils.data import DataLoader
-from downstream_task.utils import get_config, get_model, get_wandb_config, get_metrics
-# from downstream_task.metrics import get_metrics
+from downstream_task.utils import get_config, get_wandb_config
 from dataset import get_dataset
 from sklearn.model_selection import train_test_split
 from embeddings.fasttext import FastTextEmbeddings
@@ -23,6 +20,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_path', type=str, default='./configs/config.yaml')
     parser.add_argument('--use_wandb', action='store_true')
+    parser.add_argument('--wandb_project', type=str, default='nlp-project')
+    parser.add_argument('--sweep_config', type=str, default=None)
+    parser.add_argument('--dataset', type=str, default='liar')
+    parser.add_argument('--embedding_path', type=str, default='./outputs/wikipedia_cs_embedding/wikipedia_cs_embedding.ft')
+    parser.add_argument('--language', type=str, default='cs')
+
+    # remove sweep_id.txt file
+    if os.path.exists('./sweep_id.txt'):
+        os.remove('./sweep_id.txt')
 
     args = parser.parse_args()
 
@@ -30,76 +36,65 @@ if __name__ == '__main__':
     os.environ["WANDB_API_KEY"] = wandb_config.WANDB_API_KEY
     os.environ["WANDB_USERNAME"] = wandb_config.WANDB_USERNAME
     os.environ["WANDB_DIR"] = wandb_config.WANDB_DIR
+    os.environ["WANDB_PROJECT"] = args.wandb_project
 
-    config = get_config(args.config_path)
-    config = namedtuple('config', config.keys())(*config.values())
+    if args.sweep_config is not None:
+        sweep_config = get_config(args.sweep_config)
+        config = None
+    else: 
+        config = get_config(args.config_path)
+        config = namedtuple('config', config.keys())(*config.values())
+        sweep_config = None
 
     logging.info('Loading embedding')
-    embedding = load_embedding(config.embedding_path)
+    embedding = load_embedding(args.embedding_path)
     embedding_dict = embedding.get_embed_dict()
 
     logging.info('Loading dataset')
     dataset = get_dataset(
-        dataset_name=config.dataset,
+        dataset_name=args.dataset,
         path=None,
-        language=config.language
+        language=args.language
     )
+    #change the dataset to have the same count for each class based on the minium count of the classes
+    dataset.get_balanced_dataset()
+
 
     logging.info(f'Dataset size: {len(dataset)}')
-
     # split dataset into train and validation and test
     train_data, valid_data = train_test_split(
-        dataset, test_size=0.4, random_state=42
+        dataset, test_size=0.2, random_state=42
     )
     valid_data, test_data = train_test_split(
         valid_data, test_size=0.5, random_state=42
     )
-
     logging.info(f'Train size: {len(train_data)}')
     logging.info(f'Validation size: {len(valid_data)}')
     logging.info(f'Test size: {len(test_data)}')
 
-    logging.info('Creating model')
-    model = get_model(
-        config=config, 
-        dataset=dataset, 
-        embedding_dict=embedding_dict
-    )
-
     logging.info('Dataset stats')
     dataset.print_stats()
-
-    def collate(batch):
-        inputs = [item[0] for item in batch]
-        labels = torch.LongTensor([item[1] for item in batch])
-        text = [item[2] for item in batch]
-        return inputs, labels, text
-
-    train_dataloader = DataLoader(
-        train_data, shuffle=True, batch_size=config.batch_size, collate_fn=collate)
-
-    eval_dataloader = DataLoader(
-        valid_data, batch_size=config.batch_size, collate_fn=collate)
-    
-    test_dataloader = DataLoader(
-        test_data, batch_size=config.batch_size, collate_fn=collate)
-
-    metrics = get_metrics(config.metrics)
     
     trainer = Trainer(
-        model=model,
-        train_dataset=train_dataloader,
-        eval_dataset=eval_dataloader,
-        test_dataset=test_dataloader,
+        train_dataset=train_data,
+        eval_dataset=valid_data,
+        test_dataset=test_data,
+        dataset=dataset,
         config=config,
-        metrics=metrics,
-        use_wandb=args.use_wandb
+        sweep_config=sweep_config,
+        use_wandb=args.use_wandb,
+        embedding_dict=embedding_dict,
+        embedding_path=args.embedding_path,
+        dataset_name=args.dataset,
     )
 
     logging.info('Training model')
-    trainer.train()
+    if args.sweep_config is not None:
+        trainer.train_with_sweep()
+    else:
+        trainer.train()
 
-    logging.info('Evaluating model')
-    trainer.evaluate(model=model)
+    # logging.info('Evaluating model')
+    # trainer.evaluate(model=model)
 
 
