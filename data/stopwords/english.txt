@@ -169,10 +169,6 @@ c's
 ca
 call
 came
-can
-can't
-cannot
-cant
 caption
 case
 cases
@@ -717,7 +713,6 @@ noone
 nor
 normally
 nos
-not
 noted
 nothing
 notwithstanding

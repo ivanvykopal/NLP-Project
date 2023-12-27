@@ -177,3 +177,6 @@ Data test.ipynb
 SentenceTransformer.py
 
 data copy/*
+src/wandb/*
+src/sweep*
+src/*.txt
