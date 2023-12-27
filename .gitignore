@@ -180,3 +180,4 @@ data copy/*
 src/wandb/*
 src/sweep*
 src/*.txt
+src/embeddings/bert_tokenizer/*
