@@ -7,6 +7,7 @@ class DemagogDataset(Dataset):
     def __init__(self, path: str = None, language: str = 'cs') -> None:
         self.language = language
         self.load_data()
+        self.create_vocab()
 
     def convert_targets(self, target):
         if target in ['Nepravda', 'Zavádzajúce', 'Zavádějící']:
@@ -29,6 +30,7 @@ class DemagogDataset(Dataset):
         self.data = self.data.drop_duplicates(subset=['claim'])
         self.data['claim_tokens'] = self.data.claim.apply(
             partial(self.preprocess_string, language=self.convert_language(self.language)))
+        self.data = self.data[self.data['claim_tokens'].map(len) > 0]
         self.data['label'] = self.data.label.apply(self.convert_targets)
 
     def load_data_mixture(self, path: str = '../data/demagog/demagog') -> None:

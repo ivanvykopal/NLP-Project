@@ -1,7 +1,11 @@
+from tqdm import tqdm
+from nltk.tokenize import sent_tokenize
 import pandas as pd
 from gensim.parsing.preprocessing import remove_stopwords, strip_punctuation, strip_tags, strip_multiple_whitespaces, strip_numeric, strip_short, strip_short, strip_numeric, strip_punctuation, strip_tags, strip_multiple_whitespaces, remove_stopwords
 from embeddings.utils import load_stopwords
 from torch.utils.data import Dataset as TorchDataset
+import nltk
+nltk.download('punkt')
 
 
 class Dataset(TorchDataset):
@@ -13,12 +17,12 @@ class Dataset(TorchDataset):
         else:
             self.load_data()
 
-    def load_data(self, path: str=None) -> None:
+    def load_data(self, path: str = None) -> None:
         raise NotImplementedError
 
     def get_data(self) -> pd.DataFrame:
         return self.data
-    
+
     def preprocess_string(self, text, language):
         stopwords = load_stopwords(language)
 
@@ -36,7 +40,7 @@ class Dataset(TorchDataset):
         data = strip_short(data, minsize=3)
 
         return data.split()
-    
+
     def convert_language(self, language):
         if language == 'sk':
             return 'slovak'
@@ -69,7 +73,7 @@ class Dataset(TorchDataset):
         self.targets = self.data['label'].to_list()
 
     def get_stats(self):
-        ## add count for each class
+        # add count for each class
         counts = self.data['label'].value_counts()
         return {
             'language': self.language,
@@ -80,9 +84,9 @@ class Dataset(TorchDataset):
             'n_tokens': sum([len(sequence) for sequence in self.sequences]),
             'n_unique_tokens': len(set([token for sequence in self.sequences for token in sequence])),
             'class_counts': {
-                'SUPPORTS': counts[0],
-                'REFUTES': counts[1],
-                'NOT ENOUGH INFO': counts[2],
+                'SUPPORTS': counts[1],
+                'REFUTES': counts[0],
+                # 'NOT ENOUGH INFO': counts[2],
             }
         }
 
@@ -102,3 +106,35 @@ class Dataset(TorchDataset):
 
     def __getitem__(self, idx):
         return self.sequences[idx], self.targets[idx], self.text[idx]
+
+    def get_balanced_dataset(self):
+        # remove class 2
+        self.data = self.data[self.data['label'] != 2]
+
+        # balance dataset based on the count for each class
+        counts = self.data['label'].value_counts()
+        min_count = min(counts)
+        balanced_data = pd.concat([
+            self.data[self.data['label'] == label].sample(min_count)
+            for label in counts.index
+        ])
+
+        self.data = balanced_data
+        self.text = self.data['claim'].to_list()
+        self.sequences = self.data['indexed_tokens'].to_list()
+        self.targets = self.data['label'].to_list()
+
+    def save_data(self, path='temp.txt'):
+        # save data where each sentence in one line as txt file
+        sentences = [
+            sent_tokenize(text.replace('\n', ''))
+            for text in tqdm(self.data, desc='Tokenizing sentences')
+        ]
+        sentences = [item.strip() for sublist in tqdm(
+            sentences, 'Splitting sentences') for item in sublist]
+        # filter out empty sentences
+        non_empty_sentences = [
+            sentence for sentence in sentences if sentence.strip()]
+
+        with open(path, 'w') as f:
+            f.write('\n'.join(non_empty_sentences))

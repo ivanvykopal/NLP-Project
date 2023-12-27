@@ -13,11 +13,13 @@ from .xfact import XFactDataset
 
 class CombinedClaimDataset(Dataset):
     def __init__(self, datasets=None, language=None):
+        self.language = language
         if language is None:
             self.datasets = datasets
         else:
             self.get_data_for_language(language)
         self.load_data()
+        self.create_vocab()
 
     def get_data_for_language(self, language):
         if language == 'sk':

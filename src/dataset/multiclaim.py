@@ -7,6 +7,7 @@ class MultiClaimDataset(Dataset):
     def __init__(self, path: str = None, language: str = 'en') -> None:
         self.language = language
         self.load_data()
+        self.create_vocab()
 
     def convert_language_triplet(self, language: str) -> str:
         if language == 'en':
@@ -59,4 +60,5 @@ class MultiClaimDataset(Dataset):
 
         self.data['claim_tokens'] = self.data.claim.apply(
             partial(self.preprocess_string, language=self.convert_language(self.language)))
+        self.data = self.data[self.data['claim_tokens'].map(len) > 0]
         self.data['label'] = self.data.label.apply(self.convert_targets)

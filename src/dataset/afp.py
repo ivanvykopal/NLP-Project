@@ -61,6 +61,7 @@ class AFPDataset(Dataset):
         self.data['claim_tokens'] = self.data.claim.apply(
             partial(self.preprocess_string, language=self.convert_language(self.language)))
         self.data['label'] = self.data.label.apply(self.convert_targets)
+        self.data = self.data[self.data['claim_tokens'].map(len) > 0]
         # remove all rows, where the label is not 0, 1 or 2
         self.data = self.data[self.data['label'].isin([0, 1, 2])]
 

@@ -7,6 +7,7 @@ class XFactDataset(Dataset):
     def __init__(self, path: str = '../data/x-fact/train.all.tsv') -> None:
         self.language = 'en'
         self.load_data()
+        self.create_vocab()
 
     def convert_targets(self, target):
         if target in ['mostly false', 'false']:
@@ -27,4 +28,5 @@ class XFactDataset(Dataset):
 
         self.data['claim_tokens'] = self.data.claim.apply(
             partial(self.preprocess_string, language=self.convert_language(self.language)))
+        self.data = self.data[self.data['claim_tokens'].map(len) > 0]
         self.data['label'] = self.data.label.apply(self.convert_targets)

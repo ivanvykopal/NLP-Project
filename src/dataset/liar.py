@@ -7,6 +7,7 @@ class LiarDataset(Dataset):
     def __init__(self, path: str = '../data/liar/train.tsv') -> None:
         self.language = self.convert_language('en')
         self.load_data()
+        self.create_vocab()
 
     def convert_targets(self, target):
         # ['pants-fire', 'false', 'barely-true', 'half-true', 'mostly-true', 'true']
@@ -17,8 +18,10 @@ class LiarDataset(Dataset):
         else:
             return 2
 
-    def load_data(self, path: str = '../data/liar/train.tsv') -> None:
-        df = pd.read_csv(path, sep='\t', header=None)
+    def load_data(self, path: str = '../data/liar/') -> None:
+        df = pd.DataFrame()
+        for file in ['train.tsv', 'valid.tsv', 'test.tsv']:
+            df = pd.concat([df, pd.read_csv(path + file, sep='\t', header=None)])
 
         self.data = df[[2, 1]]
         # rename columns
@@ -28,4 +31,5 @@ class LiarDataset(Dataset):
         self.data.drop_duplicates(subset=['claim'], inplace=True)
         self.data['claim_tokens'] = self.data.claim.apply(
             partial(self.preprocess_string, language=self.language))
+        self.data = self.data[self.data['claim_tokens'].map(len) > 0]
         self.data['label'] = self.data.label.apply(self.convert_targets)

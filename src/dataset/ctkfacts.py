@@ -19,7 +19,7 @@ class CTKFactsDataset(Dataset):
             return 2
 
 
-    def load_data(self, path: str = '../../data/ctkfacts/label_wo_delclaims.csv') -> None:
+    def load_data(self, path: str = '../data/ctkfacts/label_wo_delclaims.csv') -> None:
         df = pd.read_csv(path)
 
         self.data = df[['claim_text', 'label']]
@@ -31,4 +31,5 @@ class CTKFactsDataset(Dataset):
         self.data = self.data.drop_duplicates(subset=['claim'])
         self.data['claim_tokens'] = self.data.claim.apply(
             partial(self.preprocess_string, language=self.language))
+        self.data = self.data[self.data['claim_tokens'].map(len) > 0]
         self.data['label'] = self.data.label.apply(self.convert_targets)
