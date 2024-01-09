@@ -18,7 +18,7 @@ from .combined import CombinedDataset
 from .sumeczech import SumeCzechDataset
 
 
-def get_dataset(dataset_name: str, path: str=None, language: str=None) -> Dataset:
+def get_dataset(dataset_name: str, path: str = None, language: str = None) -> Dataset:
     if dataset_name == 'fever':
         return FEVERDataset(path)
     elif dataset_name == 'csfever':

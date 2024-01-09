@@ -4,8 +4,8 @@ from .dataset import Dataset
 
 
 class XFactDataset(Dataset):
-    def __init__(self, path: str = '../data/x-fact/train.all.tsv') -> None:
-        self.language = 'en'
+    def __init__(self, path: str = '../data/x-fact/train.all.tsv', language='en') -> None:
+        self.language = language
         self.load_data()
         self.create_vocab()
 
@@ -24,7 +24,7 @@ class XFactDataset(Dataset):
         # remove non-claim rows
         self.data = self.data[~self.data['label'].isna()]
         self.data.drop_duplicates(subset=['claim'], inplace=True)
-        self.data = self.data[self.data['language'] == 'en']
+        self.data = self.data[self.data['language'] == self.language]
 
         self.data['claim_tokens'] = self.data.claim.apply(
             partial(self.preprocess_string, language=self.convert_language(self.language)))

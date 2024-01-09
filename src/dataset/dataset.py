@@ -24,7 +24,7 @@ class Dataset(TorchDataset):
         return self.data
 
     def preprocess_string(self, text, language):
-        stopwords = load_stopwords(language)
+        # stopwords = load_stopwords(language)
 
         try:
             data = text.lower()
@@ -33,11 +33,11 @@ class Dataset(TorchDataset):
             raise
         data = data.replace('„', '').replace('“', '')
         data = strip_tags(data)
-        data = strip_punctuation(data)
+        # data = strip_punctuation(data)
         data = strip_multiple_whitespaces(data)
-        data = strip_numeric(data)
-        data = remove_stopwords(data, stopwords=stopwords)
-        data = strip_short(data, minsize=3)
+        # data = strip_numeric(data)
+        # data = remove_stopwords(data, stopwords=stopwords)
+        # data = strip_short(data, minsize=3)
 
         return data.split()
 
@@ -57,13 +57,14 @@ class Dataset(TorchDataset):
         raise NotImplementedError
 
     def create_vocab(self):
-        vocab = sorted({
+        self.vocab = set({
             token
             for claim in self.data['claim_tokens'].to_list()
             for token in claim
         })
-        self.token2idx = {token: idx for idx, token in enumerate(vocab)}
-        self.token2idx['<pad>'] = max(self.token2idx.values()) + 1
+        self.vocab = sorted(list(self.vocab))
+        self.vocab.append('<pad>')
+        self.token2idx = {token: idx for idx, token in enumerate(self.vocab)}
         self.idx2token = {idx: token for token, idx in self.token2idx.items()}
         self.data['indexed_tokens'] = self.data.claim_tokens.apply(
             lambda tokens: [self.token2idx[token] for token in tokens],
@@ -75,6 +76,7 @@ class Dataset(TorchDataset):
     def get_stats(self):
         # add count for each class
         counts = self.data['label'].value_counts()
+        # print(self.data['label'].value_counts())
         return {
             'language': self.language,
             'size': len(self.sequences),
@@ -107,6 +109,14 @@ class Dataset(TorchDataset):
     def __getitem__(self, idx):
         return self.sequences[idx], self.targets[idx], self.text[idx]
 
+    def create_binary_dataset(self):
+        # remove class 2
+        self.data = self.data[self.data['label'] != 2]
+
+        self.text = self.data['claim'].to_list()
+        self.sequences = self.data['indexed_tokens'].to_list()
+        self.targets = self.data['label'].to_list()
+
     def get_balanced_dataset(self):
         # remove class 2
         self.data = self.data[self.data['label'] != 2]
@@ -124,7 +134,7 @@ class Dataset(TorchDataset):
         self.sequences = self.data['indexed_tokens'].to_list()
         self.targets = self.data['label'].to_list()
 
-    def save_data(self, path='temp.txt'):
+    def save_data(self, path='temp-wikipedia_cs_sk.txt'):
         # save data where each sentence in one line as txt file
         sentences = [
             sent_tokenize(text.replace('\n', ''))

@@ -21,11 +21,11 @@ class CSFEVERDataset(Dataset):
 
     def load_data(self, path: str = '../data/fever/') -> None:
         files = ['train_cs.jsonl', 'dev_cs.jsonl']
-        self.data =  []
+        self.data = []
 
         for file in files:
-            path = path + file
-            with open(path, 'r') as f:
+            cur_path = path + file
+            with open(cur_path, 'r') as f:
                 lines = f.readlines()
                 data = [json.loads(line) for line in lines]
                 self.data.extend(data)
