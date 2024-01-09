@@ -1,0 +1,35 @@
+learning_rate: 0.00005
+optimizer: AdamW
+loss: CrossEntropyLoss
+batch_size: 32
+epochs: 25
+num_warmup_steps: 0
+model_name: CustomBERT
+output_path: ../results
+eval_strategy: steps
+fp16: True
+dataset: liar
+dataset_path: ../data
+model_path: ./outputs/bert_model/ccnews_en/checkpoint-300000
+tokenizer_path: './embeddings/bert_tokenizer/ccnews_en/vocab.txt'
+embedding_path: './outputs/fasttext/ud_en_embedding/ud_en_embedding.ft'
+language: en
+output_dim: 2
+device: cuda
+metrics:
+  - name: f1
+    task: binary
+    # average: macro
+    # num_classes: 2
+  - name: accuracy
+    task: binary
+    # average: macro
+    # num_classes: 2
+  - name: precision
+    task: binary
+    # average: macro
+    # num_classes: 2
+  - name: recall
+    task: binary
+    # average: macro
+    # num_classes: 2

@@ -181,3 +181,12 @@ src/wandb/*
 src/sweep*
 src/*.txt
 src/embeddings/bert_tokenizer/*
+
+data/news2022/*
+data/clef2022/*
+data/ud/*
+src/models/*
+src/models2/*
+data/clef2023/*
+data/claimbuster/*
+data/climate2022/*

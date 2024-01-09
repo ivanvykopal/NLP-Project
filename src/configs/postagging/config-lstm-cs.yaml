@@ -1,0 +1,40 @@
+learning_rate: 0.001
+optimizer: Adam
+loss: CrossEntropyLoss
+batch_size: 256
+epochs: 15
+num_warmup_steps: 0
+model_name: POSLSTMClassifier
+output_path: ../results
+eval_strategy: steps
+fp16: True
+dataset: ud
+dataset_path: ../data
+language: cs
+embedding: fasttext
+# embedding_path: ./outputs/fasttext/combined_en_embedding/combined_en_embedding.ft
+embedding_path: ./outputs/ud_cs/ud_cs
+embedding_dim: 100
+hidden_dim: 64
+n_layers: 1
+dropout: 0.2
+bidirectional: True
+output_dim: 18
+device: cuda
+metrics:
+  - name: f1
+    task: multiclass
+    average: macro
+    num_classes: 18
+  - name: accuracy
+    task: multiclass
+    average: macro
+    num_classes: 18
+  - name: precision
+    task: multiclass
+    average: macro
+    num_classes: 18
+  - name: recall
+    task: multiclass
+    average: macro
+    num_classes: 18
