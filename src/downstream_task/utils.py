@@ -1,6 +1,7 @@
 import yaml
 import configparser as ConfigParser
 from collections import namedtuple
+from downstream_task.custom_bert import CustomBERT
 from embeddings.utils import load_stopwords
 import torchmetrics
 from gensim.parsing.preprocessing import remove_stopwords, strip_punctuation, strip_tags, strip_multiple_whitespaces, strip_numeric, strip_short, strip_short, strip_numeric, strip_punctuation, strip_tags, strip_multiple_whitespaces, remove_stopwords
@@ -12,6 +13,7 @@ from .LSTM import LSTMClassifier
 from .LSTM2 import LSTMClassifier2
 from .LSTM3 import LSTMClassifier3
 from .LSTM4 import LSTMClassifier4
+from .POSLSTM import POSLSTMClassifier
 
 
 WandbConfig = namedtuple(
@@ -29,6 +31,7 @@ def get_wandb_config(path):
         WANDB_DIR=config.get('wandb', 'WANDB_DIR')
     )
 
+
 def get_config(config_path):
     with open(config_path) as f:
         config = yaml.safe_load(f)
@@ -37,11 +40,13 @@ def get_config(config_path):
 
 def get_model(config, dataset, embedding_dict=None):
     model_name = config.model_name
-    embedding_dim = config.embedding_dim if hasattr(config, 'embedding_dim') else None
+    embedding_dim = config.embedding_dim if hasattr(
+        config, 'embedding_dim') else None
     hidden_dim = config.hidden_dim if hasattr(config, 'hidden_dim') else None
     n_layers = config.n_layers if hasattr(config, 'n_layers') else None
     output_dim = config.output_dim if hasattr(config, 'output_dim') else None
-    bidirectional = config.bidirectional if hasattr(config, 'bidirectional') else None
+    bidirectional = config.bidirectional if hasattr(
+        config, 'bidirectional') else None
 
     # unique_words = get_unique_words(list(dataset.data['claim']), dataset.language)
     # # add <pad> token
@@ -109,32 +114,47 @@ def get_model(config, dataset, embedding_dict=None):
         return XLMMLM100(config)
     elif model_name.lower() == 'xlmroberta':
         return XLMRoBERTa(config)
+    elif model_name.lower() == 'custombert':
+        return CustomBERT(config)
+    elif model_name.lower() == 'poslstmclassifier':
+        return POSLSTMClassifier(
+            embedding_dim=embedding_dim,
+            hidden_dim=hidden_dim,
+            n_layers=n_layers,
+            output_dim=output_dim,
+            bidirectional=bidirectional,
+            embedding_dict=embedding_dict,
+            vocabulary=vocabulary,
+            padding_idx=dataset.token2idx['<pad>'],
+            batch_size=config.batch_size,
+            device=config.device
+        )
     else:
         raise ValueError('Invalid model name')
-    
+
 
 def get_metrics(metrics):
     metrics_list = []
     for metric in metrics:
         print(metric)
         name = metric['name']
-        # delete name from metric
-        del metric['name']
+        rest = {k: v for k, v in metric.items() if k != 'name'}
+
         if name == 'accuracy':
             metrics_list.append(
-                Metric(name='accuracy', compute=torchmetrics.Accuracy(**metric))
+                Metric(name='accuracy', compute=torchmetrics.Accuracy(**rest))
             )
         elif name == 'precision':
             metrics_list.append(
-                Metric(name='precision', compute=torchmetrics.Precision(**metric))
+                Metric(name='precision', compute=torchmetrics.Precision(**rest))
             )
         elif name == 'recall':
             metrics_list.append(
-                Metric(name='recall', compute=torchmetrics.Recall(**metric))
+                Metric(name='recall', compute=torchmetrics.Recall(**rest))
             )
         elif name == 'f1':
             metrics_list.append(
-                Metric(name='f1', compute=torchmetrics.F1Score(**metric))
+                Metric(name='f1', compute=torchmetrics.F1Score(**rest))
             )
         elif name == 'auc':
             metrics_list.append(
@@ -146,7 +166,8 @@ def get_metrics(metrics):
             )
         elif name == 'confusion_matrix':
             metrics_list.append(
-                Metric(name='confusion_matrix', compute=torchmetrics.ConfusionMatrix())
+                Metric(name='confusion_matrix',
+                       compute=torchmetrics.ConfusionMatrix())
             )
         elif name == 'roc_auc':
             metrics_list.append(
@@ -154,7 +175,7 @@ def get_metrics(metrics):
             )
         else:
             raise ValueError('Invalid metric name')
-        
+
     return metrics_list
 
 
@@ -180,13 +201,11 @@ def preprocess_string(text, language, source_path='../data/stopwords/'):
     data = strip_short(data, minsize=3)
 
     return data.split()
-        
+
 
 def get_unique_words(data, language):
     return list(
         set([
-                word for claim in data
-                for word in preprocess_string(claim, language)
-            ]))
-    
-
+            word for claim in data
+            for word in preprocess_string(claim, language)
+        ]))
