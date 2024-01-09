@@ -10,6 +10,9 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
+# ten random seeds
+SEEDS = [42, 123, 456, 789]  # , 987, 654, 321, 111, 999, 888]
+
 
 def load_embedding(path):
     embedding = FastTextEmbeddings()
@@ -20,13 +23,13 @@ def load_embedding(path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_path', type=str,
-                        default='./configs/config.yaml')
+                        default='./configs/config_bert.yaml')
     parser.add_argument('--use_wandb', action='store_true')
     parser.add_argument('--wandb_project', type=str, default='nlp-project')
     parser.add_argument('--sweep_config', type=str, default=None)
     parser.add_argument('--dataset', type=str, default='liar')
     parser.add_argument('--embedding_path', type=str,
-                        default='./outputs/wikipedia_cs_embedding/wikipedia_cs_embedding.ft')
+                        default='./outputs/fasttext/ud_en_embedding/ud_en_embedding.ft')
     parser.add_argument('--language', type=str, default='cs')
 
     # remove sweep_id.txt file
@@ -60,41 +63,42 @@ if __name__ == '__main__':
         language=args.language
     )
     # change the dataset to have the same count for each class based on the minium count of the classes
-    dataset.get_balanced_dataset()
-
+    # dataset.get_balanced_dataset()
+    dataset.create_binary_dataset()
     logging.info(f'Dataset size: {len(dataset)}')
-    # split dataset into train and validation and test
-    train_data, valid_data = train_test_split(
-        dataset, test_size=0.2, random_state=42
-    )
-    valid_data, test_data = train_test_split(
-        valid_data, test_size=0.5, random_state=42
-    )
-    logging.info(f'Train size: {len(train_data)}')
-    logging.info(f'Validation size: {len(valid_data)}')
-    logging.info(f'Test size: {len(test_data)}')
 
-    logging.info('Dataset stats')
-    dataset.print_stats()
+    for seed_idx, seed in enumerate(SEEDS):
+        logging.info(f'Seed: {seed}')
+        # split dataset into train and validation and test
+        train_data, valid_data = train_test_split(
+            dataset, test_size=0.2, random_state=seed
+        )
+        valid_data, test_data = train_test_split(
+            valid_data, test_size=0.5, random_state=seed
+        )
+        logging.info(f'Train size: {len(train_data)}')
+        logging.info(f'Validation size: {len(valid_data)}')
+        logging.info(f'Test size: {len(test_data)}')
 
-    trainer = Trainer(
-        train_dataset=train_data,
-        eval_dataset=valid_data,
-        test_dataset=test_data,
-        dataset=dataset,
-        config=config,
-        sweep_config=sweep_config,
-        use_wandb=args.use_wandb,
-        embedding_dict=embedding_dict,
-        embedding_path=args.embedding_path,
-        dataset_name=args.dataset,
-    )
+        logging.info('Dataset stats')
+        dataset.print_stats()
 
-    logging.info('Training model')
-    if args.sweep_config is not None:
-        trainer.train_with_sweep()
-    else:
-        trainer.train()
+        trainer = Trainer(
+            train_dataset=train_data,
+            eval_dataset=valid_data,
+            test_dataset=test_data,
+            dataset=dataset,
+            config=config,
+            sweep_config=sweep_config,
+            use_wandb=args.use_wandb,
+            embedding_dict=embedding_dict,
+            embedding_path=args.embedding_path,
+            dataset_name=args.dataset,
+            seed=seed,
+        )
 
-    # logging.info('Evaluating model')
-    # trainer.evaluate(model=model)
+        logging.info('Training model')
+        trainer.train_bert()
+
+        logging.info('Evaluating model')
+        trainer.evaluate_bert(config=config)

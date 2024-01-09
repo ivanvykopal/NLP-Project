@@ -23,11 +23,11 @@ if __name__ == '__main__':
     # load wikipedia data from hugging face datasets
     logging.info('Loading dataset')
     dataset = get_dataset(args.dataset_name, args.dataset_path, args.language)
-    dataset.save_data()
+    # dataset.save_data()
 
     logging.info('Saving done!')
     model = BertModel()
-    model.train_tokenizer()
+    # model.train_tokenizer()
     logging.info('training tokenizer done!')
 
     model.train(epochs=1, output_dir=final_path)
