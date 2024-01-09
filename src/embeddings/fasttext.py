@@ -1,3 +1,4 @@
+import logging
 from gensim.models import FastText
 from gensim.parsing.preprocessing import remove_stopwords, strip_punctuation, strip_tags, strip_multiple_whitespaces, strip_numeric, strip_short, strip_short, strip_numeric, strip_punctuation, strip_tags, strip_multiple_whitespaces, remove_stopwords
 from embeddings.utils import load_stopwords
@@ -8,7 +9,6 @@ from nltk.tokenize import sent_tokenize
 from tqdm import tqdm
 import nltk
 nltk.download('punkt')
-import logging
 
 logging.basicConfig(
     format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO
@@ -61,32 +61,31 @@ class FastTextEmbeddings:
         logging.info('Training FastText model')
 
         self.model.build_vocab(preprocessed_corpus)
-        
+
         self.model.train(preprocessed_corpus,
                          total_examples=total_examples, epochs=epochs)
 
     def preprocess_string(self, text):
-        stopwords = load_stopwords(self.language)
-        if self.language == 'slovak':
-            stem = stem_sk
-        elif self.language == 'czech':
-            stem = stem_cz
-        elif self.language == 'english':
-            stemmer = PorterStemmer()
-            stem = stemmer.stem
-        elif self.language == 'german':
-            stemmer = SnowballStemmer("german")
-            stem = stemmer.stem
+        # stopwords = load_stopwords(self.language)
+        # if self.language == 'slovak':
+        #     stem = stem_sk
+        # elif self.language == 'czech':
+        #     stem = stem_cz
+        # elif self.language == 'english':
+        #     stemmer = PorterStemmer()
+        #     stem = stemmer.stem
+        # elif self.language == 'german':
+        #     stemmer = SnowballStemmer("german")
+        #     stem = stemmer.stem
 
         data = text.lower()
         data = data.replace('„', '').replace('“', '')
         data = strip_tags(data)
-        data = strip_punctuation(data)
+        # data = strip_punctuation(data)
         data = strip_multiple_whitespaces(data)
-        data = strip_numeric(data)
-        data = remove_stopwords(data, stopwords=stopwords)
-        data = strip_short(data, minsize=3)
-        # data = stem(data)
+        # data = strip_numeric(data)
+        # data = remove_stopwords(data, stopwords=stopwords)
+        # data = strip_short(data, minsize=3)
 
         return data.split()
 
@@ -98,8 +97,7 @@ class FastTextEmbeddings:
         # logging.info('Tokenization')
         # return [self.preprocess_string(sentence) for sentence in tqdm(corpus_sentences)]
         return [
-            self.preprocess_string(sentence) 
-            for text in tqdm(corpus) 
+            self.preprocess_string(sentence)
+            for text in tqdm(corpus)
             for sentence in sent_tokenize(text)
         ]
-
