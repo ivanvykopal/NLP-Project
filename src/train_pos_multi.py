@@ -1,12 +1,12 @@
 import os
-from downstream_task.trainer import Trainer
+from downstream_task.trainer_pos import TrainerPOS
 import argparse
 from downstream_task.utils import get_config, get_wandb_config
-from dataset import get_dataset
-from sklearn.model_selection import train_test_split
 from embeddings.fasttext import FastTextEmbeddings
 from collections import namedtuple
 import logging
+from sklearn.model_selection import train_test_split
+from dataset.ud_pos import UDDatasetPOS
 
 logging.basicConfig(level=logging.INFO)
 
@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_wandb', action='store_true')
     parser.add_argument('--wandb_project', type=str, default='nlp-project')
     parser.add_argument('--sweep_config', type=str, default=None)
-    parser.add_argument('--dataset', type=str, default='liar')
+    parser.add_argument('--dataset', type=str, default='ud_pos')
     parser.add_argument('--embedding_path', type=str,
                         default='./outputs/wikipedia_cs_embedding/wikipedia_cs_embedding.ft')
     parser.add_argument('--language', type=str, default='cs')
@@ -49,8 +49,6 @@ if __name__ == '__main__':
     else:
         config = get_config(args.config_path)
         config['embedding_path'] = args.embedding_path
-        config['dataset'] = args.dataset
-        config['language'] = args.language
         config = namedtuple('config', config.keys())(*config.values())
         sweep_config = None
 
@@ -59,33 +57,37 @@ if __name__ == '__main__':
     embedding_dict = embedding.get_embed_dict()
 
     logging.info('Loading dataset')
-    dataset = get_dataset(
-        dataset_name=args.dataset,
-        path=None,
-        language=args.language
-    )
-    # change the dataset to have the same count for each class based on the minium count of the classes
-    # dataset.get_balanced_dataset()
-
-    dataset.create_binary_dataset()
-    logging.info(f'Dataset size: {len(dataset)}')
-    # split dataset into train and validation and test
+    dataset_sk = UDDatasetPOS(language='sk')
+    dataset_cs = UDDatasetPOS(language='cs')
+    dataset = UDDatasetPOS(language='cs_sk')
 
     for seed_idx, seed in enumerate(SEEDS):
-        train_data, valid_data = train_test_split(
-            dataset, test_size=0.2, random_state=seed
+        logging.info(f'Dataset size: {len(dataset)}')
+        # split dataset into train and validation and test
+        train_data_sk, valid_data_sk = train_test_split(
+            dataset_sk, test_size=0.4, random_state=seed
         )
-        valid_data, test_data = train_test_split(
-            valid_data, test_size=0.5, random_state=seed
+        valid_data_sk, test_data_sk = train_test_split(
+            valid_data_sk, test_size=0.5, random_state=seed
         )
+
+        train_data_cs, valid_data_cs = train_test_split(
+            dataset_cs, test_size=0.4, random_state=seed
+        )
+
+        valid_data_cs, test_data_cs = train_test_split(
+            valid_data_cs, test_size=0.5, random_state=seed
+        )
+
+        train_data = train_data_sk + train_data_cs
+        valid_data = valid_data_sk + valid_data_cs
+        test_data = test_data_sk
+
         logging.info(f'Train size: {len(train_data)}')
         logging.info(f'Validation size: {len(valid_data)}')
         logging.info(f'Test size: {len(test_data)}')
 
-        logging.info('Dataset stats')
-        dataset.print_stats()
-
-        trainer = Trainer(
+        trainer = TrainerPOS(
             train_dataset=train_data,
             eval_dataset=valid_data,
             test_dataset=test_data,
@@ -96,7 +98,7 @@ if __name__ == '__main__':
             embedding_dict=embedding_dict,
             embedding_path=args.embedding_path,
             dataset_name=args.dataset,
-            seed=seed,
+            seed=seed
         )
 
         logging.info('Training model')

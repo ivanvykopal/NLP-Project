@@ -392,8 +392,16 @@ class Trainer:
             #     artifact.add_file(local_path=model_path)
             #     wandb.run.log_artifact(artifact)
 
-    def evaluate(self, model, metrics):
+    def evaluate(self, config):
         eval_loss = 0
+
+        model = get_model(
+            config=config,
+            dataset=self.dataset,
+            embedding_dict=self.embedding_dict
+        )
+        metrics = get_metrics(config.metrics)
+
         # load the best model
         model.load_state_dict(
             torch.load(
@@ -407,6 +415,8 @@ class Trainer:
         test_metrics = {}
         for metric in metrics:
             test_metrics[f"test_{metric.name}"] = 0.0
+
+        model.to(self.device)
 
         for batch in tqdm(test_dataloader, desc=f'Evaluation'):
             with torch.no_grad():
@@ -429,9 +439,11 @@ class Trainer:
 
         logging.info(f'Evaluation loss: {eval_loss}')
         logging.info(f'Evaluation metrics: {test_metrics}')
-        if self.use_wandb:
-            wandb.log({**test_metrics, 'test_loss': eval_loss})
-            wandb.finish()
+        os.makedirs(
+            f'./models/{config.embedding_path.split("/")[-1].split(".")[0]}/{config.dataset}/{config.model_name}', exist_ok=True)  # nopep8
+        with open(f'./models/{config.embedding_path.split("/")[-1].split(".")[0]}/{config.dataset}/{config.model_name}/metrics-{self.seed}.json', 'w') as f:  # nopep8
+            import json
+            json.dump(test_metrics, f)
 
     def evaluate_bert(self, config):
         eval_loss = 0

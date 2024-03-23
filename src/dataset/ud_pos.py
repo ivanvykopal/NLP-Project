@@ -77,17 +77,17 @@ class UDDatasetPOS(Dataset):
             df = pd.DataFrame()
             for split in self.splits:
                 for subset in subsets:
-                    if self.split == 'train' and subset == 'cs_pdt':
+                    if split == 'train' and subset == 'cs_pdt':
                         for train in pdt_train:
                             data = parse(
-                                open(f'../data/ud/{subset}-ud-{self.split}-{train}.conllu', 'r').read())
+                                open(f'../data/ud/{subset}-ud-{split}-{train}.conllu', 'r').read())
                             data = flatten(data)
                             data_df = pd.DataFrame(data)
                             data_df['split'] = split
                             df = pd.concat([df, data_df])
                     else:
                         data = parse(
-                            open(f'../data/ud/{subset}-ud-{self.split}.conllu', 'r').read())
+                            open(f'../data/ud/{subset}-ud-{split}.conllu', 'r').read())
                         data = flatten(data)
                         data_df = pd.DataFrame(data)
                         data_df['split'] = split
